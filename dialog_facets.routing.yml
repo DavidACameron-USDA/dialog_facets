@@ -1,0 +1,8 @@
+dialog_facets.facet:
+  path: '/dialog-facets/{facet}'
+  defaults:
+    _controller: '\Drupal\dialog_facets\Controller\DialogFacetsController::content'
+    _title_callback: '\Drupal\dialog_facets\Controller\DialogFacetsController::title'
+  requirements:
+    _permission: 'access content'
+
