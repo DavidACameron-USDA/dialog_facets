@@ -72,7 +72,15 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return ['dialog_type' => 'modal'];
+    $config = [
+      'dialog_type' => 'modal'
+    ];
+
+    /** @var \Drupal\facets\FacetInterface $facet */
+    $facet = $this->facetStorage->load($this->getDerivativeId());
+    $config['link_title'] = empty($facet) ? '' : $facet->label();
+
+    return $config;
   }
 
   /**
@@ -80,6 +88,13 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
    */
   public function blockForm($form, FormStateInterface $form_state) {
     $form = parent::blockForm($form, $form_state);
+    $config = $this->getConfiguration();
+
+    $form['link_title'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Link text'),
+      '#default_value' => $config['link_title'],
+    ];
 
     $form['dialog_type'] = [
       '#type' => 'radios',
@@ -101,6 +116,7 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
   public function blockSubmit($form, FormStateInterface $form_state) {
     parent::blockSubmit($form, $form_state);
     $values = $form_state->getValues();
+    $this->configuration['link_title'] = $values['link_title'];
     $this->configuration['dialog_type'] = $values['dialog_type'];
   }
 
@@ -139,7 +155,7 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
 
     $build['link'] = [
       '#type' => 'link',
-      '#title' => $facet->label(),
+      '#title' => $this->configuration['link_title'],
       '#url' => Url::fromRoute('dialog_facets.facet', ['facet' => $facet->id()]),
       '#attributes' => [
         'class' => ['use-ajax'],
