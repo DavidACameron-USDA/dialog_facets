@@ -63,7 +63,7 @@ class DialogFacetsLinkBlockDeriver implements ContainerDeriverInterface {
 
         $plugin_derivatives[$machine_name] = [
           'id' => $base_plugin_id . PluginBase::DERIVATIVE_SEPARATOR . $machine_name,
-          'label' => $this->t('Modal Facet Link: :facet', [':facet' => $facet->getName()]),
+          'label' => $this->t('Dialog Facet Link: :facet', [':facet' => $facet->getName()]),
           'admin_label' => $facet->getName(),
           'description' => $this->t('Modal Facet Link'),
         ] + $base_plugin_definition;
