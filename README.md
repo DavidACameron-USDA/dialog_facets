@@ -1,4 +1,4 @@
-# Details Facets
+# Dialog Facets
 This module provides alternate modes of viewing the blocks of search facets 
 that are provided by the [Facets](https://drupal.org/project/facets) module.
 Instead of displaying the facets in a traditional Drupal block they are
