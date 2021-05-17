@@ -160,6 +160,7 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
       '#attributes' => [
         'class' => ['use-ajax'],
         'data-dialog-options' => Json::encode(['width' => 350]),
+        'rel' => 'nofollow',
       ],
       '#options' => [
         'query' => $query->all(),
