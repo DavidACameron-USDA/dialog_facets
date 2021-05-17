@@ -155,7 +155,7 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
 
     $build['link'] = [
       '#type' => 'link',
-      '#title' => $this->configuration['link_title'],
+      '#title' => $this->t($this->configuration['link_title']),
       '#url' => Url::fromRoute('dialog_facets.facet', ['facet' => $facet->id()]),
       '#attributes' => [
         'class' => ['use-ajax'],
