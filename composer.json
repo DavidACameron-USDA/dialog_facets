@@ -1,6 +1,6 @@
 {
   "name": "dcameron/dialog_facets",
   "description": "Displays facets in a modal or off-canvas dialog",
-  "type": "drupal-module",
+  "type": "drupal-module"
 }
 
