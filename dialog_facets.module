@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks and other functions for dialog_facets.
+ */
+
+/**
+ * Implements hook_views_pre_view().
+ */
+function dialog_facets_views_pre_view(\Drupal\views\ViewExecutable $view, $display_id, array &$args) {
+  if (\Drupal::routeMatch()->getRouteName() == 'dialog_facets.facet' && empty($args)) {
+    $args = \Drupal::request()->query->all('dialog_facets_args') ?? [];
+  }
+}
+

@@ -7,6 +7,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\Core\Url;
 use Drupal\facets\FacetManager\DefaultFacetManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -36,6 +37,13 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
   protected $facetStorage;
 
   /**
+   * The current_route_match_service.
+   *
+   * @var \Drupal\Core\Routing\CurrentRouteMatch
+   */
+  protected $routeMatch;
+
+  /**
    * Construct a DialogFacetsLinkBlock instance.
    *
    * @param array $configuration
@@ -48,10 +56,13 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
    *   The facet manager.
    * @param \Drupal\Core\Entity\EntityStorageInterface $facet_storage
    *   The entity storage used for facets.
+   * @param \Drupal\Core\Routing\CurrentRouteMatch
+   *   The current_route_match_service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, DefaultFacetManager $facet_manager, EntityStorageInterface $facet_storage) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, DefaultFacetManager $facet_manager, EntityStorageInterface $facet_storage, CurrentRouteMatch $route_match) {
     $this->facetManager = $facet_manager;
     $this->facetStorage = $facet_storage;
+    $this->routeMatch = $route_match;
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
@@ -64,7 +75,8 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
       $plugin_id,
       $plugin_definition,
       $container->get('facets.manager'),
-      $container->get('entity_type.manager')->getStorage('facets_facet')
+      $container->get('entity_type.manager')->getStorage('facets_facet'),
+      $container->get('current_route_match')
     );
   }
 
@@ -132,7 +144,7 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
 
     $build['#cache'] = ['contexts' => ['url.query_args']];
 
-    // In oder to know whether a facet dialog link should be displayed, the
+    // In order to know whether a facet dialog link should be displayed, the
     // facet must be processed to see if there are any results.  Unfortunately,
     // the DefaultFacetManager is kind of unfriendly toward what we're trying
     // to do.  We could call $this->facetManager->build($facet) and then
@@ -149,6 +161,11 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
       return $build;
     }
 
+    // View arguments have to be passed to the dialog facet controller via
+    // query parameters. Otherwise the facets won't work for views with
+    // contextual arguments. Right now this only works for page-display views.
+    $dialog_facets_args = $this->getPageViewArgs();
+
     // The current page's query parameters need to be added to the dialog link
     // or Facets won't have any context about existing searches.
     $query = \Drupal::request()->query;
@@ -163,7 +180,7 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
         'rel' => 'nofollow',
       ],
       '#options' => [
-        'query' => $query->all(),
+        'query' => $query->all() + ['dialog_facets_args' => $dialog_facets_args],
       ],
       '#attached' => [
         'library' => [
@@ -186,6 +203,42 @@ class DialogFacetsLinkBlock extends BlockBase implements ContainerFactoryPluginI
     }
 
     return $build;
+  }
+
+  /**
+   * Gets view arguments from the current route.
+   *
+   * This was copied entirely from
+   * \Drupal\views\Routing\ViewPageController::handle().
+   *
+   * @return string[]
+   *   An array of arguments for a view page display.
+   */
+  protected function getPageViewArgs() {
+    $args = [];
+    $route = $this->routeMatch->getRouteObject();
+    $map = $route->hasOption('_view_argument_map') ? $route->getOption('_view_argument_map') : [];
+
+    foreach ($map as $attribute => $parameter_name) {
+      // Allow parameters be pulled from the request.
+      // The map stores the actual name of the parameter in the request. Views
+      // which override existing controller, use for example 'node' instead of
+      // arg_nid as name.
+      if (isset($map[$attribute])) {
+        $attribute = $map[$attribute];
+      }
+      if ($arg = $this->routeMatch->getRawParameter($attribute)) {
+      }
+      else {
+        $arg = $this->routeMatch->getParameter($attribute);
+      }
+
+      if (isset($arg)) {
+        $args[] = $arg;
+      }
+    }
+
+    return $args;
   }
 
   /**
