@@ -44,6 +44,8 @@ class DialogFacetsController extends ControllerBase {
    *   A render array.
    */
   public function content($facet) {
+    $build = [];
+
     /** @var \Drupal\facets\FacetInterface $facet */
     $facet = $this->facetStorage->load($facet);
 
@@ -52,8 +54,21 @@ class DialogFacetsController extends ControllerBase {
       (!$facet->getFacetSource() || !$facet->getFacetSource()->isRenderedInCurrentRequest())) {
       return [];
     }
+    $build['content'] = $this->facetManager->build($facet);
 
-    return $this->facetManager->build($facet);
+    // Forbid web crawlers from indexing these pages.
+    $build['#attached']['html_head'][] = [
+      [
+        '#tag' => 'meta',
+        '#attributes' => [
+          'name' => 'robots',
+          'content' => 'noindex',
+        ],
+      ],
+      'robots',
+    ];
+
+    return $build;
   }
 
   /**
